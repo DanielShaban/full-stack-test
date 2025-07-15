@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\TravelRequest;
+use App\Http\Resources\TimeTravelResource;
+use App\Models\User;
 use App\Repositories\TimeTravelRepository;
-use Illuminate\Http\JsonResponse;
 
 class TimeTravelController extends Controller
 {
@@ -11,17 +13,25 @@ class TimeTravelController extends Controller
     {
     }
 
-    public function forward(): JsonResponse
+    public function travel(TravelRequest $request, User $user): TimeTravelResource
     {
-        $this->repository->forward();
-
-        return response()->json(['message' => 'Time traveled forward by one week.']);
+        return new TimeTravelResource($this->repository->travel($request->location(), $request->travelTo(), $user));
     }
 
-    public function back(): JsonResponse
+    public function return(User $user): TimeTravelResource
     {
-        now()->subWeek();
+        return new TimeTravelResource($this->repository->return($user));
+    }
 
-        return response()->json(['message' => 'Time traveled back by one week.']);
+    public function forward(User $user): TimeTravelResource
+    {
+        return new TimeTravelResource($this->repository->forward($user));
+    }
+
+    public function back(User $user): TimeTravelResource
+    {
+        $user->update(['traveled_to_date' => $user->traveled_to_date->add($user->traveled_at_date->diffInSeconds(now()), 'seconds')->subWeek(), 'traveled_at_date' => now()]);
+
+        return new TimeTravelResource($user);
     }
 }

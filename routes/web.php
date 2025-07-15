@@ -14,8 +14,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     })->name('dashboard');
 
     Route::prefix('travel')->as('travel.')->group(function () {
-        Route::get('forward', [TimeTravelController::class, 'forward'])->name('forward');
-        Route::put('back', [TimeTravelController::class, 'back'])->name('back');
+        Route::get('{user}/forward', [TimeTravelController::class, 'forward'])->name('forward');
+        Route::put('{user}/back', [TimeTravelController::class, 'back'])->name('back');
     });
 });
 
