@@ -65,4 +65,24 @@ class User extends Authenticatable implements OAuthenticatable
     {
         return $this->belongsTo(TimeTravelEvent::class, 'latest_travel_id');
     }
+
+    /**
+     * Check if the user is currently time traveling
+     */
+    public function isCurrentlyTraveling(): bool
+    {
+        $currentState = TimeTravelEvent::getCurrentState($this->id);
+        return $currentState &&
+               $currentState->to_location !== null &&
+               $currentState->arrival_timestamp !== null;
+    }
+
+    /**
+     * Get the user's current location coordinates
+     */
+    public function getCurrentLocationCoordinates(): ?string
+    {
+        $currentState = TimeTravelEvent::getCurrentState($this->id);
+        return $currentState?->to_location;
+    }
 }

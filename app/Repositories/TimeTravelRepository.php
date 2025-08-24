@@ -102,6 +102,7 @@ class TimeTravelRepository
             'departure_timestamp' => $oldTimestamp,
             'arrival_timestamp' => $newTimestamp,
             'metadata' => [
+                // NOT REQUIRED, But it's a good idea to have it
                 'time_difference' => $oldTimestamp->diffInSeconds($newTimestamp) . ' seconds'
             ]
         ]);
