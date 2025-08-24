@@ -1,0 +1,368 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Time Travel API",
+        "description": "API for managing time travel operations and querying agent locations",
+        "contact": {
+            "name": "Time Travel Support",
+            "email": "admin@timetravel.com"
+        },
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "http://127.0.0.1:8000",
+            "description": "Time Travel API Server"
+        }
+    ],
+    "paths": {
+        "/api/{user}/travel": {
+            "post": {
+                "tags": [
+                    "Time Travel"
+                ],
+                "summary": "Travel to a specific location and time",
+                "description": "Initiates time travel to specified coordinates and historical/future date",
+                "operationId": "travel",
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "description": "User ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "location",
+                                    "travelTo"
+                                ],
+                                "properties": {
+                                    "location": {
+                                        "description": "Coordinates (latitude,longitude)",
+                                        "type": "string",
+                                        "example": "41.9028,12.4964"
+                                    },
+                                    "travelTo": {
+                                        "description": "Target date and time",
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "example": "0080-05-01 12:00:00"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Travel initiated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "user": {
+                                                    "type": "object"
+                                                },
+                                                "currentState": {
+                                                    "type": "object"
+                                                },
+                                                "isCurrentlyTraveling": {
+                                                    "type": "boolean"
+                                                },
+                                                "currentLocation": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request - user already traveling or invalid data"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                }
+            }
+        },
+        "/api/{user}/return": {
+            "put": {
+                "tags": [
+                    "Time Travel"
+                ],
+                "summary": "Return to present time",
+                "description": "Returns the user from their current time travel location back to present time",
+                "operationId": "return",
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "description": "User ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Returned to present time successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "user": {
+                                                    "type": "object"
+                                                },
+                                                "currentState": {
+                                                    "type": "object"
+                                                },
+                                                "isCurrentlyTraveling": {
+                                                    "type": "boolean"
+                                                },
+                                                "currentLocation": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request - user not currently traveling"
+                    }
+                }
+            }
+        },
+        "/api/{user}/forward": {
+            "patch": {
+                "tags": [
+                    "Time Travel"
+                ],
+                "summary": "Move forward in time",
+                "description": "Moves the user forward in time by 1 week from their current location",
+                "operationId": "forward",
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "description": "User ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Moved forward in time successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "user": {
+                                                    "type": "object"
+                                                },
+                                                "currentState": {
+                                                    "type": "object"
+                                                },
+                                                "isCurrentlyTraveling": {
+                                                    "type": "boolean"
+                                                },
+                                                "currentLocation": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request - user not currently traveling"
+                    }
+                }
+            }
+        },
+        "/api/{user}/back": {
+            "patch": {
+                "tags": [
+                    "Time Travel"
+                ],
+                "summary": "Move backward in time",
+                "description": "Moves the user backward in time by 3 days from their current location",
+                "operationId": "back",
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "description": "User ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Moved backward in time successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "user": {
+                                                    "type": "object"
+                                                },
+                                                "currentState": {
+                                                    "type": "object"
+                                                },
+                                                "isCurrentlyTraveling": {
+                                                    "type": "boolean"
+                                                },
+                                                "currentLocation": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request - user not currently traveling"
+                    }
+                }
+            }
+        },
+        "/api/{user}/location": {
+            "get": {
+                "tags": [
+                    "Location Queries"
+                ],
+                "summary": "Query agent location",
+                "description": "Query an agent's location at a specific time or their current location",
+                "operationId": "queryLocation",
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "description": "User ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "at",
+                        "in": "query",
+                        "description": "Timestamp to query location at (ISO8601 format). If not provided, returns current location.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time",
+                            "example": "0080-05-01T12:00:00+00:00"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Location query successful",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "user_id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "user_name": {
+                                                    "type": "string",
+                                                    "example": "John Doe"
+                                                },
+                                                "query_timestamp": {
+                                                    "type": "string",
+                                                    "format": "date-time"
+                                                },
+                                                "location": {
+                                                    "type": "string",
+                                                    "example": "41.9028,12.4964",
+                                                    "nullable": true
+                                                },
+                                                "event_type": {
+                                                    "type": "string",
+                                                    "example": "travel"
+                                                },
+                                                "departure_time": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "nullable": true
+                                                },
+                                                "arrival_time": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "nullable": true
+                                                },
+                                                "metadata": {
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error - invalid timestamp format"
+                    }
+                }
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Time Travel",
+            "description": "Time travel operations (travel, return, forward, back)"
+        },
+        {
+            "name": "Location Queries",
+            "description": "Query agent locations at specific times or current state"
+        }
+    ]
+}

@@ -8,4 +8,5 @@ Route::middleware(['auth:api'])->group(function () {
     Route::put('{user}/return', [TimeTravelController::class, 'return'])->name('return');
     Route::patch('{user}/forward', [TimeTravelController::class, 'forward'])->name('forward');
     Route::patch('{user}/back', [TimeTravelController::class, 'back'])->name('back');
+    Route::get('{user}/location', [TimeTravelController::class, 'queryLocation'])->name('queryLocation');
 });
