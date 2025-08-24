@@ -30,8 +30,6 @@ class TimeTravelController extends Controller
 
     public function back(User $user): TimeTravelResource
     {
-        $user->update(['traveled_to_date' => $user->traveled_to_date->add($user->traveled_at_date->diffInSeconds(now()), 'seconds')->subWeek(), 'traveled_at_date' => now()]);
-
-        return new TimeTravelResource($user);
+        return new TimeTravelResource($this->repository->back($user));
     }
 }
