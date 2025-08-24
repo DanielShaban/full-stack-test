@@ -25,12 +25,12 @@ return new class extends Migration
             $table->timestamps();
 
             // Indexes for performance
+            $table->index(['user_id', 'id']); // Optimized for getCurrentState queries
             $table->index(['user_id', 'arrival_timestamp']);
             $table->index(['user_id', 'departure_timestamp']);
             $table->index('event_type');
             $table->index('from_location');
             $table->index('to_location');
-            $table->index(['user_id', 'created_at']);
         });
 
         // Step 2: Migrate existing time travel data from users table

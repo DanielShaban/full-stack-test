@@ -24,6 +24,7 @@ class User extends Authenticatable implements OAuthenticatable
         'name',
         'email',
         'password',
+        'latest_travel_id',
     ];
 
     /**
@@ -58,45 +59,10 @@ class User extends Authenticatable implements OAuthenticatable
     }
 
     /**
-     * Get the current time travel state for this user
+     * Get the latest time travel event for this user
      */
-    public function currentTimeTravelState()
+    public function latestTimeTravelEvent()
     {
-        return $this->hasOne(TimeTravelEvent::class)->latest();
-    }
-
-    /**
-     * Get the user's current location coordinates
-     */
-    public function getCurrentLocationCoordinates(): ?string
-    {
-        return $this->currentTimeTravelState?->to_location;
-    }
-
-    /**
-     * Get the user's current traveled to date
-     */
-    public function getCurrentTraveledToDate(): ?string
-    {
-        return $this->currentTimeTravelState?->arrival_timestamp?->toDateTimeString();
-    }
-
-    /**
-     * Check if the user is currently time traveling
-     */
-    public function isCurrentlyTraveling(): bool
-    {
-        $currentState = $this->currentTimeTravelState;
-        return $currentState &&
-               $currentState->to_location !== null &&
-               $currentState->arrival_timestamp !== null;
-    }
-
-    /**
-     * Get the user's time travel history
-     */
-    public function getTimeTravelHistory()
-    {
-        return $this->timeTravelEvents()->orderBy('created_at', 'desc')->get();
+        return $this->belongsTo(TimeTravelEvent::class, 'latest_travel_id');
     }
 }
