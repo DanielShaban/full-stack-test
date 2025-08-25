@@ -6,25 +6,12 @@ use Carbon\Carbon;
 
 class LocationQueryResult
 {
-    private array $metadata;
-
     public function __construct(
         public readonly int $userId,
         public readonly string $userName,
         public readonly string $queryTimestamp,
-        public readonly ?string $location,
-        public readonly string $eventType,
-        public readonly ?string $departureTime,
-        public readonly ?string $arrivalTime,
-        ?array $metadata = null
-    ) {
-        $this->metadata = $metadata ?? [];
-    }
-
-    public function getMetadata(): array
-    {
-        return $this->metadata;
-    }
+        public readonly ?array $locations
+    ) {}
 
     /**
      * Create from array data
@@ -35,11 +22,7 @@ class LocationQueryResult
             userId: $data['user_id'],
             userName: $data['user_name'],
             queryTimestamp: $data['query_timestamp'],
-            location: $data['location'],
-            eventType: $data['event_type'],
-            departureTime: $data['departure_time'],
-            arrivalTime: $data['arrival_time'],
-            metadata: $data['metadata'] ?? []
+            locations: $data['locations'] ?? null
         );
     }
 
@@ -52,11 +35,7 @@ class LocationQueryResult
             'user_id' => $this->userId,
             'user_name' => $this->userName,
             'query_timestamp' => $this->queryTimestamp,
-            'location' => $this->location,
-            'event_type' => $this->eventType,
-            'departure_time' => $this->departureTime,
-            'arrival_time' => $this->arrivalTime,
-            'metadata' => $this->getMetadata(),
+            'locations' => $this->locations,
         ];
     }
 
@@ -65,7 +44,7 @@ class LocationQueryResult
      */
     public function isAtPresentTime(): bool
     {
-        return $this->eventType === 'present' || $this->location === null;
+        return empty($this->locations);
     }
 
     /**
@@ -73,7 +52,7 @@ class LocationQueryResult
      */
     public function isTimeTraveling(): bool
     {
-        return $this->eventType !== 'present' && $this->location !== null;
+        return !empty($this->locations);
     }
 
     /**
@@ -81,6 +60,14 @@ class LocationQueryResult
      */
     public function getActiveLocation(): ?string
     {
-        return $this->isTimeTraveling() ? $this->location : null;
+        return $this->isTimeTraveling() && !empty($this->locations) ? $this->locations[0]['location'] : null;
+    }
+
+    /**
+     * Get all locations
+     */
+    public function getAllLocations(): array
+    {
+        return $this->locations ?? [];
     }
 }

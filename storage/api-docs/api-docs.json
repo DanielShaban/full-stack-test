@@ -2,7 +2,7 @@
     "openapi": "3.0.0",
     "info": {
         "title": "Time Travel API",
-        "description": "API for managing time travel operations and querying agent locations",
+        "description": "API for managing time travel operations and querying agent locations. The system maintains a clean event log of all time travel activities, optimized for O(1) current state retrieval. Return operations require specifying when the agent returns from their time travel journey.",
         "contact": {
             "name": "Time Travel Support",
             "email": "admin@timetravel.com"
@@ -22,7 +22,7 @@
                     "Time Travel"
                 ],
                 "summary": "Travel to a specific location and time",
-                "description": "Initiates time travel to specified coordinates and historical/future date",
+                "description": "Initiates time travel to specified coordinates and historical/future date. Can only be used when the user is at the server location (not currently time traveling).",
                 "operationId": "travel",
                 "parameters": [
                     {
@@ -71,17 +71,21 @@
                                     "properties": {
                                         "data": {
                                             "properties": {
-                                                "user": {
-                                                    "type": "object"
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
                                                 },
-                                                "currentState": {
-                                                    "type": "object"
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "John Doe"
                                                 },
-                                                "isCurrentlyTraveling": {
-                                                    "type": "boolean"
+                                                "email": {
+                                                    "type": "string",
+                                                    "example": "john@example.com"
                                                 },
-                                                "currentLocation": {
-                                                    "type": "string"
+                                                "latest_travel_id": {
+                                                    "type": "integer",
+                                                    "example": 3
                                                 }
                                             },
                                             "type": "object"
@@ -107,7 +111,7 @@
                     "Time Travel"
                 ],
                 "summary": "Return to present time",
-                "description": "Returns the user from their current time travel location back to present time",
+                "description": "Returns the user from their current time travel location back to present time. The return_time represents when the agent returns from their time travel journey (from the agent's perspective).",
                 "operationId": "return",
                 "parameters": [
                     {
@@ -129,17 +133,21 @@
                                     "properties": {
                                         "data": {
                                             "properties": {
-                                                "user": {
-                                                    "type": "object"
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
                                                 },
-                                                "currentState": {
-                                                    "type": "object"
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "John Doe"
                                                 },
-                                                "isCurrentlyTraveling": {
-                                                    "type": "boolean"
+                                                "email": {
+                                                    "type": "string",
+                                                    "example": "john@example.com"
                                                 },
-                                                "currentLocation": {
-                                                    "type": "string"
+                                                "latest_travel_id": {
+                                                    "type": "integer",
+                                                    "example": 5
                                                 }
                                             },
                                             "type": "object"
@@ -152,6 +160,9 @@
                     },
                     "400": {
                         "description": "Bad request - user not currently traveling"
+                    },
+                    "422": {
+                        "description": "Validation error - return_time is required and must be valid date format"
                     }
                 }
             }
@@ -184,17 +195,21 @@
                                     "properties": {
                                         "data": {
                                             "properties": {
-                                                "user": {
-                                                    "type": "object"
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
                                                 },
-                                                "currentState": {
-                                                    "type": "object"
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "John Doe"
                                                 },
-                                                "isCurrentlyTraveling": {
-                                                    "type": "boolean"
+                                                "email": {
+                                                    "type": "string",
+                                                    "example": "john@example.com"
                                                 },
-                                                "currentLocation": {
-                                                    "type": "string"
+                                                "latest_travel_id": {
+                                                    "type": "integer",
+                                                    "example": 4
                                                 }
                                             },
                                             "type": "object"
@@ -217,7 +232,7 @@
                     "Time Travel"
                 ],
                 "summary": "Move backward in time",
-                "description": "Moves the user backward in time by 3 days from their current location",
+                "description": "Moves the user backward in time by 7 days from their current location",
                 "operationId": "back",
                 "parameters": [
                     {
@@ -239,17 +254,21 @@
                                     "properties": {
                                         "data": {
                                             "properties": {
-                                                "user": {
-                                                    "type": "object"
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
                                                 },
-                                                "currentState": {
-                                                    "type": "object"
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "John Doe"
                                                 },
-                                                "isCurrentlyTraveling": {
-                                                    "type": "boolean"
+                                                "email": {
+                                                    "type": "string",
+                                                    "example": "john@example.com"
                                                 },
-                                                "currentLocation": {
-                                                    "type": "string"
+                                                "latest_travel_id": {
+                                                    "type": "integer",
+                                                    "example": 5
                                                 }
                                             },
                                             "type": "object"
@@ -320,24 +339,8 @@
                                                 "location": {
                                                     "type": "string",
                                                     "example": "41.9028,12.4964",
-                                                    "nullable": true
-                                                },
-                                                "event_type": {
-                                                    "type": "string",
-                                                    "example": "travel"
-                                                },
-                                                "departure_time": {
-                                                    "type": "string",
-                                                    "format": "date-time",
-                                                    "nullable": true
-                                                },
-                                                "arrival_time": {
-                                                    "type": "string",
-                                                    "format": "date-time",
-                                                    "nullable": true
-                                                },
-                                                "metadata": {
-                                                    "type": "object"
+                                                    "nullable": true,
+                                                    "description": "Coordinates of the agent's location. null if at present time."
                                                 }
                                             },
                                             "type": "object"

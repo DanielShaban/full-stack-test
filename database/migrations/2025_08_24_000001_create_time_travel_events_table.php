@@ -21,7 +21,6 @@ return new class extends Migration
             $table->string('to_location')->nullable();
             $table->datetime('departure_timestamp');
             $table->datetime('arrival_timestamp');
-            $table->json('metadata')->nullable();
             $table->timestamps();
 
             // Indexes for performance
@@ -89,12 +88,6 @@ return new class extends Migration
                 'to_location' => $user->location,
                 'departure_timestamp' => $user->traveled_at_date ?? now(),
                 'arrival_timestamp' => $user->traveled_to_date ?? now(),
-                'metadata' => json_encode([
-                    'migrated_from' => 'users_table',
-                    'original_location' => $user->location,
-                    'original_traveled_to_date' => $user->traveled_to_date?->toDateTimeString(),
-                    'original_traveled_at_date' => $user->traveled_at_date?->toDateTimeString(),
-                ]),
                 'created_at' => $user->traveled_at_date ?? now(),
                 'updated_at' => now(),
             ]);

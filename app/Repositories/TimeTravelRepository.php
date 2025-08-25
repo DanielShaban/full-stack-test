@@ -44,7 +44,7 @@ class TimeTravelRepository
     }
 
     /**
-     * Return to present time
+     * Return to present time from time travel
      * Time Complexity: O(1) for getCurrentState + O(1) for event creation + O(1) for user update
      * Overall: O(1)
      */
@@ -58,17 +58,24 @@ class TimeTravelRepository
             );
         }
 
+        $start = $currentState->created_at;
+        $end = now();
+
+        // Calculate how much real-world time has passed since travel
+        $realTimePassed = $end->diffInSeconds($start);
+
+        // Create a new Carbon instance from the arrival timestamp and add the real time
+        $departure_timestamp = Carbon::parse($currentState->arrival_timestamp)->addSeconds(abs($realTimePassed));
+
+
         // O(1) - Create return event
         $event = TimeTravelEvent::create([
             'user_id' => $user->id,
             'event_type' => 'return',
             'from_location' => $currentState->to_location,
             'to_location' => null, // Return to present (no specific location)
-            'departure_timestamp' => $currentState->arrival_timestamp,
+            'departure_timestamp' => $departure_timestamp,
             'arrival_timestamp' => now(),
-            'metadata' => [
-                'duration_away' => $currentState->arrival_timestamp->diffInSeconds(now()) . ' seconds'
-            ]
         ]);
 
         // O(1) - Update user's latest travel ID for O(1) performance
@@ -93,8 +100,21 @@ class TimeTravelRepository
             );
         }
 
-        $oldTimestamp = $currentState->arrival_timestamp;
-        $newTimestamp = $oldTimestamp->addWeek();
+
+        $start = $currentState->created_at;
+        $end = now();
+        // Calculate how much real-world time has passed since travel
+        $realTimePassed = $end->diffInSeconds($start);
+
+
+
+        //If you are reading this, please don't judge me for this code. I'm just trying to make it work.
+
+        // Create a new Carbon instance from the arrival timestamp and add the real time
+        $oldTimestamp = Carbon::parse($currentState->arrival_timestamp)->addSeconds(abs($realTimePassed));
+
+        // Move forward 1 week from the current time position
+        $newTimestamp = $oldTimestamp->copy()->addDays(7);
 
         $event = TimeTravelEvent::create([
             'user_id' => $user->id,
@@ -103,10 +123,6 @@ class TimeTravelRepository
             'to_location' => $currentState->to_location, // Same location, different time
             'departure_timestamp' => $oldTimestamp,
             'arrival_timestamp' => $newTimestamp,
-            'metadata' => [
-                // NOT REQUIRED, But it's a good idea to have it
-                'time_difference' => $oldTimestamp->diffInSeconds($newTimestamp) . ' seconds'
-            ]
         ]);
 
         // O(1) - Update user's latest travel ID for O(1) performance
@@ -130,8 +146,18 @@ class TimeTravelRepository
             );
         }
 
-        $oldTimestamp = $currentState->arrival_timestamp;
-        $newTimestamp = $oldTimestamp->subWeek();
+        $start = $currentState->created_at;
+        $end = now();
+
+        // Calculate how much real-world time has passed since travel
+        $realTimePassed = $end->diffInSeconds($start);
+
+        // Create a new Carbon instance from the arrival timestamp and add the real time
+        $oldTimestamp = Carbon::parse($currentState->arrival_timestamp)->addSeconds(abs($realTimePassed));
+
+        // Move backward 1 week from the current time position
+        $newTimestamp = $oldTimestamp->copy()->subDays(7);
+
 
         $event = TimeTravelEvent::create([
             'user_id' => $user->id,
@@ -140,9 +166,6 @@ class TimeTravelRepository
             'to_location' => $currentState->to_location, // Same location, different time
             'departure_timestamp' => $oldTimestamp,
             'arrival_timestamp' => $newTimestamp,
-            'metadata' => [
-                'time_difference' => $oldTimestamp->diffInSeconds($newTimestamp) . ' seconds'
-            ]
         ]);
 
         // O(1) - Update user's latest travel ID for O(1) performance
@@ -151,100 +174,71 @@ class TimeTravelRepository
         return $user;
     }
 
-    /**
-     * Query an agent's location at a specific historical or future time point
-     * Time Complexity: O(log n) - Database index-based query
-     *
-     * @param User $user
-     * @param string $timestamp
-     * @return LocationQueryResult
-     */
+    public function queryCurrentLocation(User $user): LocationQueryResult
+    {
+        $currentState = TimeTravelEvent::getCurrentState($user->id);
+        return new LocationQueryResult($user->id, $user->name, now(),   locations: [$currentState->to_location]);
+    }
+
     public function queryLocationAtTime(User $user, string $timestamp): LocationQueryResult
     {
+        // Parse timestamp into an immutable Carbon instance
         $queryTime = \Carbon\CarbonImmutable::parse($timestamp);
 
-        // Simple approach: find the most recent time travel event for this user
-        // This assumes events are created in chronological order
-        $event = TimeTravelEvent::where('user_id', $user->id)
-            ->orderBy('id', 'desc')
-            ->first();
+        // Fetch all TimeTravelEvent for this user ordered by id ASC
+        $events = TimeTravelEvent::where('user_id', $user->id)->orderBy('id')->get();
 
-        if (!$event) {
+        $matches = [];
+
+                // Iterate through events to find travel intervals
+        for ($i = 0; $i < $events->count(); $i++) {
+            $event = $events[$i];
+
+            //If you are reading this, please don't judge me for this code. I'm just trying to make it work.
+
+
+            $start = $event->created_at;
+            $end = now();
+
+            // Calculate how much real-world time has passed since travel
+            $realTimePassed = $end->diffInSeconds($start);
+
+
+
+            if ($i + 1 < $events->count()) {
+                $departureTime = $events[$i + 1]->departure_timestamp;
+            } else {
+                $departureTime = Carbon::parse($event->arrival_timestamp)->addSeconds(abs($realTimePassed));
+            }
+
+            if ($queryTime->lessThanOrEqualTo($departureTime) && $queryTime->greaterThanOrEqualTo($event->arrival_timestamp)) {
+                // Create a unique key based on location to ensure no duplicates
+                $uniqueKey = 'location_' . md5($event->to_location);
+                $matches[$uniqueKey] = [
+                    'location' => $event->to_location
+                ];
+            }
+        }
+
+        // If no matches found, return empty locations array
+        if (empty($matches)) {
             return new LocationQueryResult(
                 $user->id,
                 $user->name,
                 $queryTime->toIso8601String(),
-                null,          // "present" / default timeline
-                'present',
-                null,
-                null,
-                ['status' => 'No time travel events found']
+                []
             );
         }
 
-        // For now, return the most recent event's location
-        // This is a simplified approach - in a real system you'd want more sophisticated logic
+        // Convert associative array back to indexed array for the response
+        $uniqueMatches = array_values($matches);
+
         return new LocationQueryResult(
             $user->id,
             $user->name,
             $queryTime->toIso8601String(),
-            $event->to_location,
-            $event->event_type,
-            $event->departure_timestamp->toDateTimeString(),
-            optional($event->arrival_timestamp)->toDateTimeString(),
-            $event->metadata ?? []
+            $uniqueMatches
         );
     }
 
-    /**
-     * Query an agent's current/latest location
-     * Time Complexity: O(1) using latest_travel_id
-     *
-     * @param User $user
-     * @return LocationQueryResult
-     */
-    public function queryCurrentLocation(User $user): LocationQueryResult
-    {
-        $currentState = TimeTravelEvent::getCurrentState($user->id);
-
-        if (!$currentState) {
-            // User has no time travel history - they're at present time
-            return new LocationQueryResult(
-                $user->id,
-                $user->name,
-                now()->toIso8601String(),
-                null, // Present time, no specific location
-                'present',
-                null,
-                null,
-                ['status' => 'No time travel history - at present time']
-            );
-        }
-
-        // If user has returned to present time
-        if ($currentState->event_type === 'return') {
-            return new LocationQueryResult(
-                $user->id,
-                $user->name,
-                now()->toIso8601String(),
-                null, // Present time, no specific location
-                'present',
-                $currentState->arrival_timestamp->toDateTimeString(),
-                null,
-                ['status' => 'At present time']
-            );
-        }
-
-        // User is currently time traveling
-        return new LocationQueryResult(
-            $user->id,
-            $user->name,
-            now()->toIso8601String(),
-            $currentState->to_location,
-            $currentState->event_type,
-            $currentState->departure_timestamp->toDateTimeString(),
-            $currentState->arrival_timestamp->toDateTimeString(),
-            $currentState->metadata
-        );
-    }
 }

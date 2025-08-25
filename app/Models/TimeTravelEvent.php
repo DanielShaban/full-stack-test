@@ -17,13 +17,11 @@ class TimeTravelEvent extends Model
         'to_location',
         'departure_timestamp',
         'arrival_timestamp',
-        'metadata',
     ];
 
     protected $casts = [
         'departure_timestamp' => 'datetime',
         'arrival_timestamp' => 'datetime',
-        'metadata' => 'array',
     ];
 
     /**
@@ -51,7 +49,7 @@ class TimeTravelEvent extends Model
      */
     public static function getCurrentState(int $userId): ?self
     {
-        // O(1) - Get user with latest_travel_id
+        // O(1) - Get users latest_travel_id from users table
         $user = \App\Models\User::select('latest_travel_id')->find($userId);
 
         if (!$user || !$user->latest_travel_id) {
@@ -64,6 +62,7 @@ class TimeTravelEvent extends Model
         }
 
         // O(1) - Direct lookup by primary key using latest_travel_id
+        // this return the latest travel event for the user
         return static::find($user->latest_travel_id);
     }
 }
