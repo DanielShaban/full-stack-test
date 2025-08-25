@@ -106,10 +106,6 @@ class TimeTravelRepository
         // Calculate how much real-world time has passed since travel
         $realTimePassed = $end->diffInSeconds($start);
 
-
-
-        //If you are reading this, please don't judge me for this code. I'm just trying to make it work.
-
         // Create a new Carbon instance from the arrival timestamp and add the real time
         $oldTimestamp = Carbon::parse($currentState->arrival_timestamp)->addSeconds(abs($realTimePassed));
 
@@ -180,6 +176,14 @@ class TimeTravelRepository
         return new LocationQueryResult($user->id, $user->name, now(),   locations: [$currentState->to_location]);
     }
 
+    /**
+     * Query user's location at a specific timestamp
+     * Time Complexity: O(n) where n is the number of time travel events for the user
+     *
+     * @param User $user
+     * @param string $timestamp
+     * @return LocationQueryResult
+     */
     public function queryLocationAtTime(User $user, string $timestamp): LocationQueryResult
     {
         // Parse timestamp into an immutable Carbon instance
@@ -193,9 +197,6 @@ class TimeTravelRepository
                 // Iterate through events to find travel intervals
         for ($i = 0; $i < $events->count(); $i++) {
             $event = $events[$i];
-
-            //If you are reading this, please don't judge me for this code. I'm just trying to make it work.
-
 
             $start = $event->created_at;
             $end = now();
