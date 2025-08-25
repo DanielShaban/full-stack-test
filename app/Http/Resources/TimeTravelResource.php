@@ -15,7 +15,6 @@ class TimeTravelResource extends JsonResource
 
         // Get current time travel state
         $currentState = $user->latestTimeTravelEvent;
-
         return [
             'user' => [
                 'id' => $user->id,
